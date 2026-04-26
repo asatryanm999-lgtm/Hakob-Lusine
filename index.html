@@ -158,11 +158,27 @@
         let isDrawing = false;
 
         // ԱՎՏՈՄԱՏ ԲԱՑՈՒՄ 10 ՎԱՅՐԿՅԱՆԻՑ
-        setTimeout(reveal, 20000);
+       <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000 });
+        const audio = document.getElementById('bgMusic');
+        const musicIcon = document.getElementById('musicIcon');
+        
+        function toggleMusic() {
+            if (audio.paused) { audio.play(); musicIcon.className = 'fas fa-pause'; } 
+            else { audio.pause(); musicIcon.className = 'fas fa-play'; }
+        }
+
+        const canvas = document.getElementById('scratchCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        // ՀԻՄՆԱԿԱՆ ՓՈՓՈԽՈՒԹՅՈՒՆԸ՝ 10 ՎԱՅՐԿՅԱՆ ՀԵՏՈ ԱՆՊԱՅՄԱՆ ԲԱՑՎՈՒՄ Է
+        setTimeout(reveal, 10000);
 
         const silverImg = new Image();
-        silverImg.src = 'silver.jpg'; 
-        silverImg.onload = function() {
+        silverImg.src = 'silver.jpg';
+        silverImg.onload = () => {
             canvas.width = 300; canvas.height = 300;
             ctx.drawImage(silverImg, 0, 0, 300, 300);
             ctx.globalCompositeOperation = 'destination-out';
@@ -173,31 +189,20 @@
             const rect = canvas.getBoundingClientRect();
             const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
             const y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-            ctx.beginPath(); ctx.arc(x, y, 45, 0, Math.PI * 2); ctx.fill();
-            checkPercent();
-        }
-
-        function checkPercent() {
-            const pix = ctx.getImageData(0,0,300,300).data;
-            let clear = 0;
-            for(let i=0; i<pix.length; i+=4) { if(pix[i+3] === 0) clear++; }
-            if(clear/(pix.length/4) > 0.4) reveal();
+            ctx.beginPath(); ctx.arc(x, y, 40, 0, Math.PI * 2); ctx.fill();
+            // checkPercent-ը հանեցի, որ տոկոսով չբացվի
         }
 
         function reveal() {
             const cont = document.getElementById('scratch-container');
-            if (!cont || cont.style.opacity === '0') return;
+            if (cont.style.opacity === '0') return;
             cont.style.opacity = '0';
             setTimeout(() => {
                 cont.style.display = 'none';
                 const main = document.getElementById('main-invitation');
                 main.style.display = 'block';
-                setTimeout(() => { 
-                    main.style.opacity = '1'; 
-                    window.dispatchEvent(new Event('scroll')); 
-                    AOS.refresh();
-                }, 50);
-                audio.play().then(() => { musicIcon.className = 'fas fa-pause'; }).catch(() => {});
+                setTimeout(() => { main.style.opacity = '1'; AOS.refresh(); }, 50);
+                audio.play().then(() => musicIcon.className = 'fas fa-pause').catch(() => {});
             }, 1000);
         }
 
@@ -210,30 +215,24 @@
         function updatePinPosition() {
             const rBox = document.getElementById('rBox'), pin = document.getElementById('pin'), path = document.getElementById('pathLine');
             if (!rBox || !pin || !path) return;
-            const rect = rBox.getBoundingClientRect(), windowHeight = window.innerHeight;
-            let fraction = (windowHeight / 2 - rect.top) / rect.height;
+            const rect = rBox.getBoundingClientRect();
+            let fraction = (window.innerHeight / 2 - rect.top) / rect.height;
             fraction = Math.max(0, Math.min(1, fraction));
-            const pathLength = path.getTotalLength();
-            const point = path.getPointAtLength(fraction * pathLength);
-            const actualX = (point.x / 400) * rect.width;
-            const actualY = (point.y / 1300) * rect.height;
-            pin.style.left = actualX + 'px'; pin.style.top = actualY + 'px';
+            const point = path.getPointAtLength(fraction * path.getTotalLength());
+            pin.style.left = (point.x / 400) * rect.width + 'px';
+            pin.style.top = (point.y / 1300) * rect.height + 'px';
         }
-
         window.addEventListener('scroll', updatePinPosition);
-        window.addEventListener('resize', updatePinPosition);
 
         const target = new Date("August 13, 2026 17:00:00").getTime();
         setInterval(() => {
             const now = new Date().getTime();
             const d = target - now;
-            if (d > 0) {
-                document.getElementById("days").innerText = Math.floor(d / 86400000);
-                document.getElementById("hours").innerText = Math.floor((d % 86400000) / 3600000);
-                document.getElementById("mins").innerText = Math.floor((d % 3600000) / 60000);
-                document.getElementById("secs").innerText = Math.floor((d % 60000) / 1000);
-            }
+            document.getElementById("days").innerText = Math.floor(d / 86400000);
+            document.getElementById("hours").innerText = Math.floor((d % 86400000) / 3600000);
+            document.getElementById("mins").innerText = Math.floor((d % 3600000) / 60000);
+            document.getElementById("secs").innerText = Math.floor((d % 60000) / 1000);
         }, 1000);
     </script>
 </body>
-</html>   
+</html>
